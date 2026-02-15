@@ -1,50 +1,61 @@
-// import { useState, useRef, useEffect, useCallback } from "react";
-// import { client } from "./lib/appwrite";
-// import { AppwriteException } from "appwrite";
-// import AppwriteSvg from "../public/appwrite.svg";
-// import ReactSvg from "../public/react.svg";
-
-import React, { useState, useEffect } from 'react'
-import { useDispatch } from 'react-redux'
-import './App.css'
-import authService from "./appwrite/auth"
-import {login, logout} from "./store/authSlice"
-// import { Footer, Header } from '../../starter-for-react-main/src/components'
-import { Footer, Header } from '../src/components'
-
-import { Outlet } from 'react-router-dom'
-
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import "./App.css";
+import authService from "./appwrite/auth";
+import { login, logout } from "./store/authSlice";
+import { Footer, Header } from "./components";
+import { Outlet } from "react-router-dom";
 function App() {
-  const [loading, setLoading] = useState(true)
-  const dispatch = useDispatch()
-  const [detailHeight, setDetailHeight] = useState(55);
-  const [logs, setLogs] = useState([]);
-  const [status, setStatus] = useState("idle");
-  const [showLogs, setShowLogs] = useState(false);
-
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const dispatch = useDispatch();
   useEffect(() => {
-    authService.getCurrentUser()
-    .then((userData) => {
-      if (userData) {
-        dispatch(login({userData}))
-      } else {
-        dispatch(logout())
-      }
-    })
-    .finally(() => setLoading(false))
-  }, [])
-  
-  return !loading ? (
-    <div className='min-h-screen flex flex-wrap content-between bg-gray-400'>
-      <div className='w-full block'>
-        <Header />
-        <main>
-        TODO:  <Outlet />
-        </main>
-        <Footer />
-      </div>
-    </div>
-  ) : null
-}
+    authService
+      .getCurrentUser()
+      .then((userData) => {
+        if (userData) dispatch(login({ userData} ) );
+       
 
-export default App
+        else dispatch(logout());
+      })
+      
+      .finally(() => {
+        setLoading(false);
+        setTimeout(() => setMounted(true), 100);
+      });
+  }, [dispatch]);
+
+  // Fullscreen Loader
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100">
+        <div className="text-center space-y-4">
+          <div className="w-14 h-14 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-600 font-medium">Loading application...</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div
+      className={`
+        min-h-screen flex flex-col
+        bg-gradient-to-b from-gray-50 via-white to-gray-100
+        transition-opacity duration-700
+        ${mounted ? "opacity-100" : "opacity-0"}
+      `}
+    >
+      {/* Header */}
+      <Header />
+
+      {/* Main Content */}
+      <main className="flex-grow px-2 md:px-4 lg:px-6 transition-all duration-300">
+        <Outlet />
+      </main>
+
+      {/* Footer */}
+      <Footer />
+    </div>
+  );
+}
+export default App;

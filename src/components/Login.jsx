@@ -1,176 +1,136 @@
-import React, {useState} from 'react'
-import {Link, useNavigate} from 'react-router-dom'
-import { login as authLogin } from '../store/authSlice'
-import {Button, Input, Logo} from "./index"
-import {useDispatch} from "react-redux"
-import authService from "../appwrite/auth"
-import {useForm} from "react-hook-form"
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { login as authLogin } from "../store/authSlice";
+import { Button, Input, Logo } from "./index";
+import { useDispatch } from "react-redux";
+import authService from "../appwrite/auth";
+import { useForm } from "react-hook-form";
 
 function Login() {
-    const navigate = useNavigate()
-    const dispatch = useDispatch()
-    const {register, handleSubmit} = useForm()
-    const [error, setError] = useState("")
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-    const login = async(data) => {
-        setError("")
-        try {
-            const session = await authService.login(data)
-            if (session) {
-                const userData = await authService.getCurrentUser()
-                if(userData) dispatch(authLogin(userData));
-                navigate("/")
-            }
-        } catch (error) {
-            setError(error.message)
-        }
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-  return (
-    <div
-    className='flex items-center justify-center w-full'
-    >
-        <div className={`mx-auto w-full max-w-lg bg-gray-100 rounded-xl p-10 border border-black/10`}>
-        <div className="mb-2 flex justify-center">
-                    <span className="inline-block w-full max-w-[100px]">
-                        <Logo width="100%" />
-                    </span>
-        </div>
-        <h2 className="text-center text-2xl font-bold leading-tight">Sign in to your account</h2>
-        <p className="mt-2 text-center text-base text-black/60">
-                    Don&apos;t have any account?&nbsp;
-                    <Link
-                        to="/signup"
-                        className="font-medium text-primary transition-all duration-200 hover:underline"
-                    >
-                        Sign Up
-                    </Link>
-        </p>
-        {error && <p className="text-red-600 mt-8 text-center">{error}</p>}
-        <form onSubmit={handleSubmit(login)} className='mt-8'>
-            <div className='space-y-5'>
-                <Input
-                label="Email: "
-                placeholder="Enter your email"
-                type="email"
-                {...register("email", {
-                    required: true,
-                    validate: {
-                        matchPatern: (value) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
-                        "Email address must be a valid address",
-                    }
-                })}
-                />
-                <Input
-                label="Password: "
-                type="password"
-                placeholder="Enter your password"
-                {...register("password", {
-                    required: true,
-                })}
-                />
-                <Button
-                type="submit"
-                className="w-full"
-                >Sign in</Button>
-            </div>
-        </form>
-        </div>
-    </div>
-  )
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+
+  const login = async (data) => {
+    setError("");
+    setLoading(true);
+
+    try {
+      const session = await authService.login(data);
+
+      if (session) {
+        const userData = await authService.getCurrentUser();
+        if (userData) {
+  dispatch(authLogin(userData));
+
+  // Force full refresh
+  window.location.href = "/";
 }
 
-export default Login
-// import conf from "../conf/conf.js";
-// import { Client, Account, ID } from "appwrite";
+      }
+    } catch (err) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+return (
+<div className="min-h-screen flex items-center justify-center p-4">
 
-// export class AuthService {
-//     client = new Client();
-//     account;
+      {/* Card */}
+      <div className="w-full max-w-md backdrop-blur-xl bg-white/80 shadow-2xl rounded-2xl p-10 border border-white/40">
 
-//     constructor() {
-//         this.client
-//             .setEndpoint(conf.appwriteUrl)          // Example: https://fra.cloud.appwrite.io/v1
-//             .setProject(conf.appwriteProjectId);    // Your Project ID
+        {/* Logo */}
+        <div className="flex justify-center mb-5">
+          <Logo width="90px" />
+        </div>
+        {/* Title */}
+        <h2 className="text-center text-3xl font-bold text-gray-800">
+          Welcome Back 👋
+        </h2>
 
-//         this.account = new Account(this.client);
-//     }
+        <p className="mt-2 text-center text-gray-500">
+          Sign in to continue
+        </p>
 
-//     // ------------------------------
-//     // Create Account + Auto Login
-//     // ------------------------------
-//     async createAccount({ email, password, name }) {
-//         try {
-//             const userAccount = await this.account.create(
-//                 ID.unique(),
-//                 email,
-//                 password,
-//                 name
-//             );
+        {/* Error */}
+        {error && (
+          <div className="mt-5 bg-red-100 text-red-600 p-3 rounded-lg text-sm text-center">
+            {error}
+          </div>
+        )}
 
-//             if (userAccount) {
-//                 return this.login({ email, password });
-//             }
+        {/* Form */}
+        <form onSubmit={handleSubmit(login)} className="mt-6 space-y-5">
 
-//             return userAccount;
-//         } catch (error) {
-//             console.log("Create Account Error:", error);
-//             throw error;
-//         }
-//     }
+          {/* Email */}
+          <Input
+            label="Email"
+            placeholder="Enter your email"
+            type="email"
+            error={errors.email?.message}
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value:
+                  /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+                message: "Enter a valid email",
+              },
+            })}
+          />
 
-//     // ------------------------------
-//     // Login User
-//     // ------------------------------
-//     async login({ email, password }) {
-//         try {
-//             const session = await this.account.createEmailPasswordSession(
-//                 email,
-//                 password
-//             );
-//             return session;
-//         } catch (error) {
-//             console.log("Login Error:", error);
-//             throw error;
-//         }
-//     }
+          {/* Password */}
+          <Input
+            label="Password"
+            type={showPass ? "text" : "password"}
+            placeholder="Enter your password"
+            error={errors.password?.message}
+            rightIcon={
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                className="text-xs text-blue-600 font-semibold"
+              >
+                {showPass ? "Hide" : "Show"}
+              </button>
+            }
+            {...register("password", {
+              required: "Password is required",
+            })}
+          />
 
-//     // ------------------------------
-//     // Get current logged-in user
-//     // ------------------------------
-//     async getCurrentUser() {
-//         try {
-//             // Check if session exists
-//             let session = null;
-//             try {
-//                 session = await this.account.getSession("current");
-//             } catch (err) {
-//                 return null; // Guest user
-//             }
+          {/* Button */}
+          <Button
+            type="submit"
+            loading={loading}
+            className="w-full text-lg"
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </Button>
+        </form>
 
-//             if (!session) return null;
-
-//             // Fetch user
-//             return await this.account.get();
-//         } catch (error) {
-//             console.log("GetCurrentUser Error:", error);
-//             return null;
-//         }
-//     }
-
-//     // ------------------------------
-//     // Logout
-//     // ------------------------------
-//     async logout() {
-//         try {
-//             await this.account.deleteSessions();
-//             return true;
-//         } catch (error) {
-//             console.log("Logout Error:", error);
-//             return false;
-//         }
-//     }
-// }
-
-// const authService = new AuthService();
-// export default authService;
+        {/* Footer */}
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don’t have an account?{" "}
+          <Link
+            to="/signup"
+            className="font-semibold text-blue-600 hover:underline"
+          >
+            Create account
+          </Link>
+        </p>
+      </div>
+      </div>
+   );
+  }
+export default Login;

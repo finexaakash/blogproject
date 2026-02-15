@@ -1,6 +1,3 @@
-import React from 'react'
-// import { Login as Logincomponent } from '../components'
-// import { Login as Logincomponent } from  '../components/Login.jsx'
 import Logincomponent from '../components/Login.jsx'
 
 function Login() {

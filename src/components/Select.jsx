@@ -1,4 +1,4 @@
-import React, {useId} from 'react'
+import {forwardRef, useId} from "react";
 
 function Select({
     options,
@@ -9,7 +9,7 @@ function Select({
     const id = useId()
   return (
     <div className='w-full'>
-        {label && <label htmlFor={id} className=''></label>}
+        {label && <label htmlFor={id}>{label}</label>}
         <select
         {...props}
         id={id}
@@ -23,7 +23,7 @@ function Select({
             ))}
         </select>
     </div>
-  )
+  );
 }
 
-export default React.forwardRef(Select)
+export default forwardRef(Select);
